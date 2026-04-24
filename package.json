@@ -1,0 +1,21 @@
+{
+  "name": "open-ended-agent",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "An experimental local harness for running an LLM as a persistent, open-ended agent with durable memory and sandboxed tools.",
+  "scripts": {
+    "start": "bun run src/index.js",
+    "smoke": "AGENT_MAX_CYCLES=3 AGENT_HOME=./agent-home-smoke bun run src/index.js",
+    "doctor": "bun run src/doctor.js",
+    "inspect": "bun run src/inspect.js",
+    "inspect:cycles": "bun run src/inspect.js cycles",
+    "inspect:state": "bun run src/inspect.js state",
+    "inspect:diff": "bun run src/inspect.js diff",
+    "inspect:artifacts": "bun run src/inspect.js artifacts",
+    "inspect:timeline": "bun run src/inspect.js timeline"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}
