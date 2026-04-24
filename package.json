@@ -1,7 +1,6 @@
 {
   "name": "open-ended-agent",
   "version": "0.3.0",
-  "private": true,
   "type": "module",
   "description": "An experimental local harness for running an LLM as a persistent, open-ended agent with durable memory and sandboxed tools.",
   "scripts": {

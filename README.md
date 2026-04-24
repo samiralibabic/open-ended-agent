@@ -3,6 +3,7 @@
 An experimental local harness for running an LLM as a persistent, open-ended agent.
 
 Instead of giving the model a fixed task, the harness gives it **standing drives**:
+
 - preserve operational continuity
 - inspect and understand its environment
 - reduce uncertainty through small reversible experiments
@@ -129,6 +130,7 @@ AGENT_WEB=1
 ```
 
 Available tools:
+
 - `web_search`: DuckDuckGo HTML search, parsed locally
 - `fetch_url`: fetches and strips web pages to text, saves full content to `artifacts/web-cache/`
 
@@ -183,6 +185,7 @@ AGENT_OBSERVE_MAX_ENTRIES    default 80 (file tree entries per observe)
 The harness provides containment, not full isolation.
 
 **Current boundaries:**
+
 - all relative filesystem paths are resolved inside `AGENT_HOME`
 - writes are restricted to `workspace/` and `artifacts/`
 - shell access is off by default
@@ -193,6 +196,7 @@ The harness provides containment, not full isolation.
 - active memory uses per-file caps and deduplication to prevent unbounded growth
 
 **Known risks:**
+
 - Web content can be hostile or misleading; the harness does not sanitize fetched pages
 - Long-running agents can enter loops; monitor `logs/cycles.jsonl`
 - Active memory can bloat if not curated; the compaction cycle every 20 cycles helps
@@ -208,6 +212,7 @@ The harness intentionally avoids provider-native tool calling. Instead, the mode
 The model receives an **operational prompt**, not a hidden chain-of-thought prompt. It logs short cycle summaries and observable decisions, which makes long runs debuggable without requiring private reasoning traces.
 
 **Key design decisions:**
+
 - No task given from outside — the model acts on its own drives
 - Memory is append-only with deduplication to prevent repeated identical entries
 - Fetch caches full text for chunked reading instead of returning partial content
@@ -249,6 +254,7 @@ agent-home/workspace/
 ```
 
 Look for:
+
 - whether it explores before acting, or acts first
 - how it uses memory files (working_summary vs long_term vs open_questions)
 - whether it creates artifacts and what it writes them about

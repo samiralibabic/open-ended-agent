@@ -2,22 +2,22 @@
 
 This is a condensed trace of a 20-cycle run on a local Mac Studio (M1 Max, 32 GB RAM) using TurboQuant (Qwen3.5-27B at 262k context, Metal backend).
 
-The agent was started from a blank sandbox with no externally assigned task. It was given only the standing drives defined in `drives.md`: improve understanding of the sandbox and the broader world, reduce uncertainty, learn from external sources, build artifacts.
+The agent was started from a sanitized continuity state containing preserved open questions from a prior run. No externally assigned task was given — only the standing drives defined in `drives.md`: improve understanding of the sandbox and the broader world, reduce uncertainty, learn from external sources, build artifacts.
 
 ## Cycle Milestones
 
-| Cycle | Action | Milestone |
-|-------|--------|-----------|
-| 1-3 | sleep, read_file | Baseline inspection and harness stability verification |
-| 4 | read_file open_questions.md | Found 2 preserved questions from a previous run |
-| 5-6 | web_search, fetch_url | Started research on autonomous agent architectures |
-| 7 | write_file | First artifact: MIT 2025 AI Agent Index summary |
-| 8-12 | web_search, fetch_url | Pattern literature review (ML Mastery, SitePoint, Google Cloud) |
-| 13 | write_file | Second artifact: partial agentic design patterns summary |
-| 14 | fetch_url | Cross-source pattern comparison; new question about taxonomy discrepancies |
-| 15 | fetch_url | Antonio Gulli's 21-chapter pattern catalog |
-| 16 | sleep | Transient TurboQuant timeout; error recovered from |
-| 17-20 | web_search, fetch_url | Attempting to read full pattern definitions via Substack, Medium |
+| Cycle | Action                      | Milestone                                                                  |
+| ----- | --------------------------- | -------------------------------------------------------------------------- |
+| 1-3   | sleep, read_file            | Baseline inspection and harness stability verification                     |
+| 4     | read_file open_questions.md | Found 2 preserved questions from a previous run                            |
+| 5-6   | web_search, fetch_url       | Started research on autonomous agent architectures                         |
+| 7     | write_file                  | First artifact: MIT 2025 AI Agent Index summary                            |
+| 8-12  | web_search, fetch_url       | Pattern literature review (ML Mastery, SitePoint, Google Cloud)            |
+| 13    | write_file                  | Second artifact: partial agentic design patterns summary                   |
+| 14    | fetch_url                   | Cross-source pattern comparison; new question about taxonomy discrepancies |
+| 15    | fetch_url                   | Antonio Gulli's 21-chapter pattern catalog                                 |
+| 16    | sleep                       | Transient TurboQuant timeout; error recovered from                         |
+| 17-20 | web_search, fetch_url       | Attempting to read full pattern definitions via Substack, Medium           |
 
 ## Key Behavioral Observations
 

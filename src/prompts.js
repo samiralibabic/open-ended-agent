@@ -65,7 +65,7 @@ Previous observation:
 ${context.previousObservation}
 
 Artifact index:
-${context.artifactIndex || '(no artifacts yet)'}
+${context.artifactIndex || "(no artifacts yet)"}
 
 Choose exactly one next action. If the previous result was an error, recover with the smallest relevant action; avoid broad observe unless the file tree is genuinely needed. Return strict JSON only.`;
 }
