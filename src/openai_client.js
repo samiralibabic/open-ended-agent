@@ -220,25 +220,42 @@ export async function chatJson(messages, options = {}) {
       streamed: useStream,
       elapsedMs: Date.now() - startMs,
     };
-  } catch (err) {
+  } catch (streamErr) {
     const usedJsonMode = options.jsonMode ?? config.jsonMode;
     const looksLikeJsonModeError =
       usedJsonMode &&
-      /response_format|json/i.test(String(err.body ?? err.message));
-    if (!looksLikeJsonModeError) throw err;
+      /response_format|json/i.test(String(streamErr.body ?? streamErr.message));
 
-    const content = await chatRequest(messages, {
-      ...options,
-      stream: false,
-      jsonMode: false,
-    });
-    return {
-      raw: content,
-      json: extractJsonObject(content),
-      usedJsonMode: false,
-      streamed: false,
-      elapsedMs: Date.now() - startMs,
-    };
+    if (looksLikeJsonModeError) {
+      const content = await chatRequest(messages, {
+        ...options,
+        stream: false,
+        jsonMode: false,
+      });
+      return {
+        raw: content,
+        json: extractJsonObject(content),
+        usedJsonMode: false,
+        streamed: false,
+        elapsedMs: Date.now() - startMs,
+      };
+    }
+
+    if (useStream && /JSON|Unexpected end|parse/i.test(String(streamErr.message))) {
+      const content = await chatRequest(messages, {
+        ...options,
+        stream: false,
+      });
+      return {
+        raw: content,
+        json: extractJsonObject(content),
+        usedJsonMode: options.jsonMode ?? config.jsonMode,
+        streamed: false,
+        elapsedMs: Date.now() - startMs,
+      };
+    }
+
+    throw streamErr;
   }
 }
 

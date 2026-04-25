@@ -87,7 +87,7 @@ async function updateStateFile(dirs, cycles) {
   // Open questions count
   let oqCount = 0;
   try {
-    const oq = await readFileSafe(path.join(dirs.memory, "open_questions.md"));
+    const oq = await readTextSafe(path.join(dirs.memory, "open_questions.md"), 20000);
     oqCount = oq.split("\n").filter((l) => l.trim().startsWith("-")).length;
   } catch {}
 
@@ -103,7 +103,7 @@ async function updateStateFile(dirs, cycles) {
   // Skills check
   let hasSkills = false;
   try {
-    const skills = await readFileSafe(path.join(dirs.memory, "skills.md"));
+    const skills = await readTextSafe(path.join(dirs.memory, "skills.md"), 20000);
     hasSkills =
       skills.split("\n").filter((l) => l.trim().startsWith("-")).length > 1;
   } catch {}
