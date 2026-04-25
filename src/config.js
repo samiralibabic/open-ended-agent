@@ -42,6 +42,7 @@ export const config = {
   compactionMaxTokens: intEnv("AGENT_COMPACTION_MAX_TOKENS", 1536),
   llmStream: boolEnv("AGENT_LLM_STREAM", true),
   llmTimeoutMs: intEnv("AGENT_LLM_TIMEOUT_MS", 0),
+  maxResponseChars: intEnv("AGENT_MAX_RESPONSE_CHARS", 30000),
   jsonMode: boolEnv("AGENT_JSON_MODE", true),
   webEnabled: boolEnv("AGENT_WEB", true),
   shellEnabled: boolEnv("AGENT_SHELL", false),
