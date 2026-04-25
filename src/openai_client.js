@@ -14,18 +14,7 @@ function extractJsonObject(text) {
   const first = cleaned.indexOf("{");
   const last = cleaned.lastIndexOf("}");
   if (first >= 0 && last > first) {
-    const candidate = cleaned.slice(first, last + 1);
-    try {
-      return JSON.parse(candidate);
-    } catch {
-      for (let i = candidate.length - 1; i >= first; i--) {
-        if (candidate[i] === "}") {
-          try {
-            return JSON.parse(candidate.slice(first, i + 1));
-          } catch {}
-        }
-      }
-    }
+    return JSON.parse(cleaned.slice(first, last + 1));
   }
   throw new Error(
     `Model did not return parseable JSON. First 500 chars:\n${cleaned.slice(0, 500)}`,
@@ -216,49 +205,53 @@ export async function chatJson(messages, options = {}) {
   const useStream = options.stream ?? config.llmStream ?? true;
   const startMs = Date.now();
 
+  const maxTokens0 = options.maxTokens ?? config.maxTokens;
+
+  async function attempt(messages, opts, attemptTokens) {
+    const content = useStream
+      ? await chatRequestStream(messages, { ...opts, maxTokens: attemptTokens })
+      : await chatRequest(messages, { ...opts, maxTokens: attemptTokens });
+    return {
+      raw: content,
+      json: extractJsonObject(content),
+      streamed: useStream,
+    };
+  }
+
   try {
-    let content;
-    if (useStream) {
-      content = await chatRequestStream(messages, options);
-    } else {
-      content = await chatRequest(messages, options);
-    }
+    const r = await attempt(messages, options, maxTokens0);
+    return {
+      raw: r.raw,
+      json: r.json,
+      usedJsonMode: options.jsonMode ?? config.jsonMode,
+      streamed: r.streamed,
+      elapsedMs: Date.now() - startMs,
+    };
+  } catch (parseErr) {
+    if (!useStream) throw parseErr;
+
+    const retryTokens = Math.min(maxTokens0 * 2, 2048);
     try {
+      const r = await attempt(messages, options, retryTokens);
       return {
-        raw: content,
-        json: extractJsonObject(content),
+        raw: r.raw,
+        json: r.json,
         usedJsonMode: options.jsonMode ?? config.jsonMode,
-        streamed: useStream,
+        streamed: true,
         elapsedMs: Date.now() - startMs,
       };
-    } catch (parseErr) {
-      if (useStream) {
-        const content2 = await chatRequest(messages, { ...options, stream: false });
-        try {
-          return {
-            raw: content2,
-            json: extractJsonObject(content2),
-            usedJsonMode: options.jsonMode ?? config.jsonMode,
-            streamed: false,
-            elapsedMs: Date.now() - startMs,
-          };
-        } catch {}
-      }
-      throw parseErr;
-    }
-  } catch (streamErr) {
-    const usedJsonMode = options.jsonMode ?? config.jsonMode;
-    const looksLikeJsonModeError =
-      usedJsonMode &&
-      /response_format|json/i.test(String(streamErr.body ?? streamErr.message));
-
-    if (looksLikeJsonModeError) {
-      const content = await chatRequest(messages, {
-        ...options,
-        stream: false,
-        jsonMode: false,
-      });
-      try {
+    } catch (retryErr) {
+      const usedJsonMode = options.jsonMode ?? config.jsonMode;
+      if (
+        usedJsonMode &&
+        /response_format|json/i.test(String(retryErr.body ?? retryErr.message))
+      ) {
+        const content = await chatRequest(messages, {
+          ...options,
+          stream: false,
+          jsonMode: false,
+          maxTokens: retryTokens,
+        });
         return {
           raw: content,
           json: extractJsonObject(content),
@@ -266,23 +259,9 @@ export async function chatJson(messages, options = {}) {
           streamed: false,
           elapsedMs: Date.now() - startMs,
         };
-      } catch {}
+      }
+      throw parseErr;
     }
-
-    if (useStream && /JSON|Unexpected end|parse/i.test(String(streamErr.message))) {
-      const content = await chatRequest(messages, { ...options, stream: false });
-      try {
-        return {
-          raw: content,
-          json: extractJsonObject(content),
-          usedJsonMode: options.jsonMode ?? config.jsonMode,
-          streamed: false,
-          elapsedMs: Date.now() - startMs,
-        };
-      } catch {}
-    }
-
-    throw streamErr;
   }
 }
 

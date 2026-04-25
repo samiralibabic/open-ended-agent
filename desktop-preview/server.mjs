@@ -517,8 +517,7 @@ button.danger { color: white; background: var(--danger); border-color: var(--dan
 .tree { border: 1px solid var(--line); border-radius: 10px; height: 42%; min-height: 120px; overflow: auto; background: #fff; padding: 4px; flex: 0 0 auto; }
 .treeRow { display: flex; align-items: center; gap: 5px; width: 100%; text-align: left; border: 0; border-radius: 8px; background: white; font-size: 12px; padding: 5px 7px; color: var(--ink); }
 .treeRow:hover { background: var(--soft); }
-.treeRow.selected { background: var(--accent); color: #fff; }
-.treeRow.selected:hover { background: var(--accent); opacity: 0.9; }
+.treeRow.selected { background: var(--soft); }
 .treeRow.file { cursor: pointer; }
 .treeRow.readonly { color: var(--muted); opacity: 0.68; }
 .treeRow.dir { font-weight: 650; }
@@ -536,9 +535,13 @@ button.danger { color: white; background: var(--danger); border-color: var(--dan
   .resizeHandle { display: none; }
   .vResizeHandle { display: none; }
   .timeline, .outputs { grid-column: auto; grid-row: auto; }
-  .timeline, .outputs { height: auto; max-height: none; }
+  .timeline, .outputs { height: auto; overflow: visible; flex-direction: column; }
   .events { max-height: 520px; }
   .statGrid { grid-template-columns: 1fr; }
+  .tree { height: auto; max-height: 300px; flex: 0 0 auto; }
+  #fileView { min-height: 200px; height: auto; }
+  .outputs .panel { height: auto; }
+  .vResizeHandle { display: none; }
 }
 @media (max-width: 640px) {
   .topbar { padding: 12px; gap: 10px; }
@@ -549,9 +552,11 @@ button.danger { color: white; background: var(--danger); border-color: var(--dan
   .pill { font-size: 11px; padding: 6px 9px; }
   .checks, .grid2 { grid-template-columns: 1fr; }
   .focusText { font-size: 15px; height: auto; max-height: 180px; }
-  .events { max-height: 460px; }
+  .events { max-height: 360px; }
   .list { height: auto; max-height: 220px; }
-  #inbox, .tree, .fileView { height: auto; max-height: 260px; }
+  #inbox { height: auto; max-height: 200px; }
+  .tree { height: auto; max-height: 240px; }
+  #fileView { min-height: 160px; }
 }
 `;
 
@@ -559,6 +564,7 @@ const APP_JS = `let state = null;
 let lastEventId = 0;
 let expandedTreePaths = new Set(JSON.parse(localStorage.getItem('openEndedAgentExpandedTree') || '["artifacts","workspace","memory"]'));
 let selectedFilePath = localStorage.getItem('openEndedAgentSelectedFile') || '';
+let treeInitialized = false;
 let lastTimelineSignature = '';
 let lastTreeSignature = '';
 const $ = (id) => document.getElementById(id);
@@ -662,7 +668,7 @@ function renderTreeNode(node) {
   const row = document.createElement('button');
   const isDir = node.type === 'dir';
   const isOpen = expandedTreePaths.has(node.path);
-  row.className = 'treeRow ' + (isDir ? 'dir' : 'file') + (!isDir && !isEditableFile(node.path) ? ' readonly' : '');
+  row.className = 'treeRow ' + (isDir ? 'dir' : 'file') + (!isDir && !isEditableFile(node.path) ? ' readonly' : '') + (node.path === selectedFilePath ? ' selected' : '');
   row.dataset.path = node.path;
   row.innerHTML = '<span class="treeCaret">' + (isDir ? (isOpen ? '▾' : '▸') : '·') + '</span><span>' + escapeHtml(node.name) + '</span>';
   row.onclick = () => {
@@ -693,15 +699,7 @@ async function openFile(path) {
     $('saveSelectedFile').disabled = !editable;
     $('fileStatus').textContent = editable ? 'Editing ' + data.path : data.path + ' is read-only';
     $('fileView').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    updateTreeSelection();
   } catch (error) { $('fileStatus').textContent = String(error.message || error); }
-}
-
-function updateTreeSelection() {
-  for (const row of document.querySelectorAll('.treeRow')) {
-    if (row.dataset.path === selectedFilePath) row.classList.add('selected');
-    else row.classList.remove('selected');
-  }
 }
 
 function isEditableFile(path) {
@@ -830,9 +828,15 @@ function setupVerticalResizing() {
 
 async function refreshState() {
   state = await api('/api/state');
+  if (!treeInitialized && selectedFilePath) {
+    const parts = selectedFilePath.split('/');
+    for (let i = 1; i < parts.length; i++) {
+      expandedTreePaths.add(parts.slice(0, i).join('/'));
+    }
+    treeInitialized = true;
+  }
   updateDashboard();
   renderTree();
-  updateTreeSelection();
 }
 
 async function pollEvents() {
