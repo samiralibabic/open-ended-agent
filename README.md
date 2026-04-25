@@ -118,7 +118,6 @@ agent-home/
     cycles.jsonl        — every cycle (full structured log)
     compactions.jsonl   — memory compaction events
     errors.jsonl         — harness errors
-  snapshots/
 ```
 
 The model can write only to `workspace/` and `artifacts/`. It updates memory through the structured `memory_updates` channel, not by directly rewriting memory files. Useful-output notes are appended with `memory_updates.usefulness_add`.

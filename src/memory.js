@@ -23,7 +23,6 @@ export function getDirs() {
     workspace: path.join(home, "workspace"),
     artifacts: path.join(home, "artifacts"),
     logs: path.join(home, "logs"),
-    snapshots: path.join(home, "snapshots"),
   };
 }
 

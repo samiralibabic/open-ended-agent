@@ -13,7 +13,6 @@ function getDirs() {
     workspace: path.join(AGENT_HOME, "workspace"),
     artifacts: path.join(AGENT_HOME, "artifacts"),
     logs: path.join(AGENT_HOME, "logs"),
-    snapshots: path.join(AGENT_HOME, "snapshots"),
   };
 }
 

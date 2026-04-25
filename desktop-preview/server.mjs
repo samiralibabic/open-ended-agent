@@ -116,8 +116,7 @@ async function ensureAgentHome() {
     path.join(HOME, 'workspace'),
     path.join(HOME, 'artifacts'),
     path.join(HOME, 'artifacts', 'web-cache'),
-    path.join(HOME, 'logs'),
-    path.join(HOME, 'snapshots')
+    path.join(HOME, 'logs')
   ];
   for (const dir of dirs) await ensureDir(dir);
 
