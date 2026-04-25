@@ -698,6 +698,7 @@ async function openFile(path) {
     $('fileView').readOnly = !editable;
     $('saveSelectedFile').disabled = !editable;
     $('fileStatus').textContent = editable ? 'Editing ' + data.path : data.path + ' is read-only';
+    renderTree(true);
     $('fileView').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   } catch (error) { $('fileStatus').textContent = String(error.message || error); }
 }
