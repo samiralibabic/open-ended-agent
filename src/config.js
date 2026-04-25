@@ -28,9 +28,9 @@ function normalizeBaseUrl(url) {
 }
 
 export const config = {
-  baseUrl: normalizeBaseUrl(env("OPENAI_BASE_URL", "http://localhost:4000/v1")),
-  apiKey: env("OPENAI_API_KEY", "local-stack"),
-  model: env("MODEL", "qwen3.5-35b-a3b"),
+  baseUrl: normalizeBaseUrl(env("OPENAI_BASE_URL", "http://localhost:11434/v1")),
+  apiKey: env("OPENAI_API_KEY", "local"),
+  model: env("MODEL", "qwen3.5:8b"),
   agentHome: path.resolve(env("AGENT_HOME", "./agent-home")),
   maxCycles: intEnv("AGENT_MAX_CYCLES", 0),
   contextCharBudget: intEnv("AGENT_CONTEXT_CHAR_BUDGET", 90000),
