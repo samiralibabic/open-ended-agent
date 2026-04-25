@@ -575,7 +575,7 @@ function escapeHtml(s) {
 function actionLabel(action) {
   if (!action) return 'did something';
   const type = action.type || 'unknown';
-  const labels = { read_file: 'Read a file', read_file_range: 'Read part of a file', run_shell: 'Ran a safe command', write_file: 'Created a file', append_file: 'Updated a file', web_search: 'Searched the web', fetch_url: 'Read a web page', sleep: 'Paused', reflect: 'Reflected', list_dir: 'Looked at files', observe: 'Observed the workspace' };
+  const labels = { read_file: 'Read a file', read_file_range: 'Read part of a file', run_shell: 'Ran a safe command', write_file: 'Created a file', append_file: 'Updated a file', web_search: 'Searched the web', fetch_url: 'Read a web page', sleep: 'Sleeping', reflect: 'Reflected', list_dir: 'Looked at files', observe: 'Observed the workspace' };
   return labels[type] || type.replaceAll('_', ' ');
 }
 
