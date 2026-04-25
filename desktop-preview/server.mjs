@@ -517,6 +517,8 @@ button.danger { color: white; background: var(--danger); border-color: var(--dan
 .tree { border: 1px solid var(--line); border-radius: 10px; height: 42%; min-height: 120px; overflow: auto; background: #fff; padding: 4px; flex: 0 0 auto; }
 .treeRow { display: flex; align-items: center; gap: 5px; width: 100%; text-align: left; border: 0; border-radius: 8px; background: white; font-size: 12px; padding: 5px 7px; color: var(--ink); }
 .treeRow:hover { background: var(--soft); }
+.treeRow.selected { background: var(--accent); color: #fff; }
+.treeRow.selected:hover { background: var(--accent); opacity: 0.9; }
 .treeRow.file { cursor: pointer; }
 .treeRow.readonly { color: var(--muted); opacity: 0.68; }
 .treeRow.dir { font-weight: 650; }
@@ -556,7 +558,7 @@ button.danger { color: white; background: var(--danger); border-color: var(--dan
 const APP_JS = `let state = null;
 let lastEventId = 0;
 let expandedTreePaths = new Set(JSON.parse(localStorage.getItem('openEndedAgentExpandedTree') || '["artifacts","workspace","memory"]'));
-let selectedFilePath = '';
+let selectedFilePath = localStorage.getItem('openEndedAgentSelectedFile') || '';
 let lastTimelineSignature = '';
 let lastTreeSignature = '';
 const $ = (id) => document.getElementById(id);
@@ -661,6 +663,7 @@ function renderTreeNode(node) {
   const isDir = node.type === 'dir';
   const isOpen = expandedTreePaths.has(node.path);
   row.className = 'treeRow ' + (isDir ? 'dir' : 'file') + (!isDir && !isEditableFile(node.path) ? ' readonly' : '');
+  row.dataset.path = node.path;
   row.innerHTML = '<span class="treeCaret">' + (isDir ? (isOpen ? '▾' : '▸') : '·') + '</span><span>' + escapeHtml(node.name) + '</span>';
   row.onclick = () => {
     if (isDir) {
@@ -683,13 +686,22 @@ async function openFile(path) {
   try {
     const data = await api('/api/file?path=' + encodeURIComponent(path));
     selectedFilePath = data.path;
+    localStorage.setItem('openEndedAgentSelectedFile', selectedFilePath);
     $('fileView').value = data.text || '';
     const editable = isEditableFile(data.path);
     $('fileView').readOnly = !editable;
     $('saveSelectedFile').disabled = !editable;
     $('fileStatus').textContent = editable ? 'Editing ' + data.path : data.path + ' is read-only';
     $('fileView').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    updateTreeSelection();
   } catch (error) { $('fileStatus').textContent = String(error.message || error); }
+}
+
+function updateTreeSelection() {
+  for (const row of document.querySelectorAll('.treeRow')) {
+    if (row.dataset.path === selectedFilePath) row.classList.add('selected');
+    else row.classList.remove('selected');
+  }
 }
 
 function isEditableFile(path) {
@@ -820,6 +832,7 @@ async function refreshState() {
   state = await api('/api/state');
   updateDashboard();
   renderTree();
+  updateTreeSelection();
 }
 
 async function pollEvents() {
@@ -836,7 +849,10 @@ $('saveSelectedFile').onclick = saveSelectedFile;
 
 setupPaneResizing();
 setupVerticalResizing();
-refreshState().then(() => setInterval(pollEvents, 1000)).catch((error) => {
+refreshState().then(async () => {
+  if (selectedFilePath) openFile(selectedFilePath);
+  setInterval(pollEvents, 1000);
+}).catch((error) => {
   document.body.innerHTML = '<pre style="padding:20px">Failed to initialize: ' + escapeHtml(String(error.message || error)) + '</pre>';
 });
 `;
