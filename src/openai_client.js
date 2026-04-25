@@ -207,13 +207,26 @@ export async function chatJson(messages, options = {}) {
 
   const maxTokens0 = options.maxTokens ?? config.maxTokens;
 
+  function isJsonModeError(err) {
+    return /response_format|json/i.test(String(err?.body ?? err?.message));
+  }
+
+  function parseJson(content) {
+    try {
+      return extractJsonObject(content);
+    } catch (err) {
+      err.isJsonParseFailure = true;
+      throw err;
+    }
+  }
+
   async function attempt(messages, opts, attemptTokens) {
     const content = useStream
       ? await chatRequestStream(messages, { ...opts, maxTokens: attemptTokens })
       : await chatRequest(messages, { ...opts, maxTokens: attemptTokens });
     return {
       raw: content,
-      json: extractJsonObject(content),
+      json: parseJson(content),
       streamed: useStream,
     };
   }
@@ -227,8 +240,25 @@ export async function chatJson(messages, options = {}) {
       streamed: r.streamed,
       elapsedMs: Date.now() - startMs,
     };
-  } catch (parseErr) {
-    if (!useStream) throw parseErr;
+  } catch (err) {
+    const usedJsonMode = options.jsonMode ?? config.jsonMode;
+    if (usedJsonMode && isJsonModeError(err)) {
+      const content = await chatRequest(messages, {
+        ...options,
+        stream: false,
+        jsonMode: false,
+        maxTokens: maxTokens0,
+      });
+      return {
+        raw: content,
+        json: parseJson(content),
+        usedJsonMode: false,
+        streamed: false,
+        elapsedMs: Date.now() - startMs,
+      };
+    }
+
+    if (!useStream || !err.isJsonParseFailure) throw err;
 
     const retryTokens = Math.min(maxTokens0 * 2, 2048);
     try {
@@ -241,10 +271,9 @@ export async function chatJson(messages, options = {}) {
         elapsedMs: Date.now() - startMs,
       };
     } catch (retryErr) {
-      const usedJsonMode = options.jsonMode ?? config.jsonMode;
       if (
         usedJsonMode &&
-        /response_format|json/i.test(String(retryErr.body ?? retryErr.message))
+        isJsonModeError(retryErr)
       ) {
         const content = await chatRequest(messages, {
           ...options,
@@ -254,13 +283,13 @@ export async function chatJson(messages, options = {}) {
         });
         return {
           raw: content,
-          json: extractJsonObject(content),
+          json: parseJson(content),
           usedJsonMode: false,
           streamed: false,
           elapsedMs: Date.now() - startMs,
         };
       }
-      throw parseErr;
+      throw err;
     }
   }
 }

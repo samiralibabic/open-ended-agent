@@ -88,6 +88,7 @@ async function loadConfig() {
       const parsed = JSON.parse(raw);
       config = {
         ...defaultConfig,
+        ...parsed,
         agentMaxCycles: Number(process.env.AGENT_MAX_CYCLES || parsed.agentMaxCycles || defaultConfig.agentMaxCycles)
       };
     } catch (error) {
@@ -122,9 +123,7 @@ async function ensureAgentHome() {
 
   const files = new Map([
     ['identity.md', '# Identity\n\nYou are a persistent local agent running inside a private user-controlled workspace. You act through small reversible steps and keep inspectable traces.\n'],
-    ['drives.md', '# Drives\n\n- Preserve operational continuity across cycles.\n- Inspect and understand your environment before acting.\n- Reduce uncertainty through small reversible experiments.\n- Learn from external sources when web access is enabled.\n- Create notes, artifacts, and tools when useful.\n- Avoid destructive actions.\n- Consolidate memory over time.\n'],
-    ['life_policy.md', '# Life Policy\n\nOptional standing policy can be added here. For useful-autonomy runs, define bounded idle-recovery rules and ask the agent to record useful outputs in memory/usefulness.md.\n'],
-    ['inbox.md', '# Inbox\n\nHuman messages to the agent go here. The agent reads this each cycle.\n'],
+    ['agent.md', '# Agent Instructions\n\n## Standing drives\n\n- Preserve operational continuity.\n- Improve understanding of the sandbox and broader world.\n- Reduce uncertainty through small reversible experiments.\n- Learn from internet sources when useful.\n- Build useful artifacts, notes, tools, scripts, datasets, guides, or test results.\n- Prefer safe, reversible actions.\n- Avoid destructive actions.\n\n## Current goals\n\nAdd temporary goals, requests, or steering notes here.\n\n## Useful-autonomy policy\n\nWhen idle for several cycles, choose one small reversible project.\n\nThe project should:\n\n- reuse at least one captured skill\n- produce one concrete artifact, script, dataset, guide, or test result\n- validate at least one claim with a safe local experiment when possible\n- keep disk/network usage small\n- record usefulness through `memory_updates.usefulness_add`\n- close with a short completion note\n\nWhen a project has a working primary output, do not spend many cycles on secondary uncertainty.\n\nAfter 3 failed attempts to validate a secondary feature:\n\n- stop probing that feature\n- record the failed attempts and uncertainty\n- preserve the working primary output\n- write or update a completion note\n- choose either a new small project or sleep\n'],
     ['memory/working_summary.md', '# Working summary\n\nNo run history yet.\n'],
     ['memory/long_term.md', '# Long-term memory\n\n'],
     ['memory/open_questions.md', '# Open questions\n\n'],
@@ -157,6 +156,7 @@ async function listTree(rel = '.', maxEntries = 120) {
     for (const entry of entries) {
       if (out.length >= maxEntries) break;
       if (entry.name === 'config.json') continue;
+      if (prefix === '' && ['drives.md', 'life_policy.md', 'inbox.md', 'snapshots'].includes(entry.name)) continue;
       const full = path.join(dir, entry.name);
       const childRel = path.relative(HOME, full).replaceAll(path.sep, '/');
       out.push({ path: childRel, type: entry.isDirectory() ? 'dir' : 'file' });
@@ -234,6 +234,19 @@ async function isObservedHarnessRunning() {
   });
 }
 
+async function getObservedHarnessModel() {
+  return await new Promise((resolve) => {
+    let out = '';
+    const child = spawn('pgrep', ['-af', 'node src/index.js|bun run src/index.js']);
+    child.stdout.on('data', (chunk) => { out += chunk.toString('utf8'); });
+    child.on('close', () => {
+      const match = out.match(/(?:^|\s)MODEL=([^\s]+)/);
+      resolve(match ? match[1] : '');
+    });
+    child.on('error', () => resolve(''));
+  });
+}
+
 async function readCycleRecords(limit = 80) {
   const raw = await readText(path.join(HOME, 'logs', 'cycles.jsonl'), '');
   const lines = raw.trim().split('\n').filter(Boolean);
@@ -274,7 +287,7 @@ function compactLedgerItems(text) {
     .slice(-8);
 }
 
-async function buildFriendlySummary(memory, cycleTotal, recentCycles, observedRunning) {
+async function buildFriendlySummary(memory, cycleTotal, recentCycles, observedRunning, observedModel) {
   const maxCycles = Number(config.agentMaxCycles || 0);
   const lastCycle = recentCycles[recentCycles.length - 1] || null;
   const artifacts = (await listTree('artifacts', 120)).filter((item) => item.type === 'file' && !item.path.includes('/web-cache/'));
@@ -291,7 +304,7 @@ async function buildFriendlySummary(memory, cycleTotal, recentCycles, observedRu
     statusLabel,
     statusDescription,
     progressLabel: maxCycles > 0 ? `Cycle ${cycleTotal} of ${maxCycles}` : `Cycle ${cycleTotal}`,
-    modelLabel: config.model || 'Unknown model',
+    modelLabel: observedModel || config.model || 'Unknown model',
     currentFocus: firstBodyLine(memory.working_summary) || 'Waiting for the agent to establish a focus.',
     lastCycle,
     recentCycles: recentCycles.slice(-20).reverse(),
@@ -307,6 +320,7 @@ async function getAppState() {
   const memory = {};
   for (const key of memoryFiles) memory[key] = await readText(path.join(HOME, 'memory', `${key}.md`), '');
   const observedRunning = await isObservedHarnessRunning();
+  const observedModel = observedRunning ? await getObservedHarnessModel() : '';
   const cycleData = await readCycleRecords();
   cycleCount = Math.max(cycleCount, cycleData.total);
   return {
@@ -317,12 +331,10 @@ async function getAppState() {
     running: observedRunning,
     observerMode: OBSERVER_MODE,
     cycleCount: cycleData.total,
-    config,
-    drives: await readText(path.join(HOME, 'drives.md'), ''),
-    lifePolicy: await readText(path.join(HOME, 'life_policy.md'), ''),
-    inbox: await readText(path.join(HOME, 'inbox.md'), ''),
+    config: { ...config, model: observedModel || config.model },
+    agent: await readText(path.join(HOME, 'agent.md'), ''),
     memory,
-    friendly: await buildFriendlySummary(memory, cycleData.total, cycleData.records, observedRunning),
+    friendly: await buildFriendlySummary(memory, cycleData.total, cycleData.records, observedRunning, observedModel),
     tree: await listTree('.', 180)
   };
 }
@@ -375,7 +387,7 @@ async function route(req, res) {
       const rel = String(body.path || '');
       const content = String(body.text ?? '');
       const { clean, resolved } = sanitizeRelativePath(rel);
-      const editable = clean === 'inbox.md' || clean === 'drives.md' || clean === 'life_policy.md';
+      const editable = clean === 'agent.md';
       if (!editable) throw new Error('This file is read-only in the UI');
       await writeText(resolved, content);
       addEvent('file.saved', `Saved ${clean}`);
@@ -419,7 +431,7 @@ const INDEX_HTML = `<!doctype html>
     <div class="resizeHandle" data-resize="right" title="Drag to resize panes"></div>
 
     <section class="panel outputs">
-      <h2>Agent notes and files</h2>
+      <h2>Memory and files</h2>
       <h3>Files</h3>
       <div id="tree" class="tree"></div>
       <div class="vResizeHandle" data-vtarget="tree" title="Drag to resize this section"></div>
@@ -479,7 +491,6 @@ label { display: block; font-size: 12px; color: var(--muted); margin: 9px 0; }
 input, textarea, button { font: inherit; }
 input, textarea { width: 100%; margin-top: 5px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 11px; background: #fff; color: var(--ink); }
 textarea { min-height: 120px; resize: vertical; line-height: 1.4; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
-#inbox { min-height: 120px; height: 40%; max-height: none; font-family: inherit; font-size: 14px; flex: 0 0 auto; }
 .timeline, .outputs { height: 100%; overflow: hidden; display: flex; flex-direction: column; }
 .focusText { min-height: 120px; height: 42%; max-height: none; overflow: auto; font-size: 17px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; flex: 0 0 auto; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -554,7 +565,6 @@ button.danger { color: white; background: var(--danger); border-color: var(--dan
   .focusText { font-size: 15px; height: auto; max-height: 180px; }
   .events { max-height: 360px; }
   .list { height: auto; max-height: 220px; }
-  #inbox { height: auto; max-height: 200px; }
   .tree { height: auto; max-height: 240px; }
   #fileView { min-height: 160px; }
 }
@@ -704,7 +714,7 @@ async function openFile(path) {
 }
 
 function isEditableFile(path) {
-  return path === 'inbox.md' || path === 'drives.md' || path === 'life_policy.md';
+  return path === 'agent.md';
 }
 
 async function saveSelectedFile() {

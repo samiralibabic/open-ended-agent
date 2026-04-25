@@ -52,7 +52,7 @@ node desktop-preview/server.mjs
 - Live activity cards from `logs/cycles.jsonl`
 - Collapsible file tree for the agent home
 - Viewer/editor for selected files
-- Editable steering files: `drives.md`, `life_policy.md`, `inbox.md`
+- Editable steering file: `agent.md`
 - Read-only agent outputs: `workspace/`, `artifacts/`, memory, logs, journal, identity, and config
 
 ## What It Does Not Do
@@ -61,7 +61,7 @@ node desktop-preview/server.mjs
 - It does not call a model endpoint.
 - It does not provide start/stop controls for the harness.
 - It does not provide demo or smoke-test routes.
-- It does not write files outside the three editable steering files.
+- It does not write files outside `agent.md`.
 
 Run the actual harness separately, pointing it at the same `AGENT_HOME`:
 
@@ -75,7 +75,7 @@ AGENT_HOME=/path/to/agent-home bun run start
 AGENT_HOME                     default ./agent-home
 HOST                           default 127.0.0.1
 PORT                           default 5179
-MODEL                          display label only
+MODEL                          fallback display label; observed harness MODEL is preferred when detected
 AGENT_MAX_CYCLES               display progress target when set
 PREVIEW_OBSERVE_EXISTING_CYCLES default 20
 NO_OPEN                        set to 1 to avoid opening a browser
@@ -85,11 +85,7 @@ NO_OPEN                        set to 1 to avoid opening a browser
 
 The preview is an observer and steering UI, not a sandbox. It does not execute agent actions or shell commands.
 
-The UI permits writes only to:
-
-- `drives.md`
-- `life_policy.md`
-- `inbox.md`
+The UI permits writes only to `agent.md`.
 
 Use a VM, container, or restricted user account for serious shell-enabled harness runs.
 

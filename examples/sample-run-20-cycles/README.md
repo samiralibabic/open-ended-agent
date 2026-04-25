@@ -2,7 +2,7 @@
 
 This is a condensed trace of a 20-cycle run on a local Mac Studio (M1 Max, 32 GB RAM) using TurboQuant (Qwen3.5-27B at 262k context, Metal backend).
 
-The agent was started from a sanitized continuity state containing preserved open questions from a prior run. No externally assigned task was given — only the standing drives defined in `drives.md`: improve understanding of the sandbox and the broader world, reduce uncertainty, learn from external sources, build artifacts.
+The agent was started from a sanitized continuity state containing preserved open questions from a prior run. No externally assigned fixed task was given — only standing instructions: improve understanding of the sandbox and the broader world, reduce uncertainty, learn from external sources, build artifacts.
 
 ## Cycle Milestones
 

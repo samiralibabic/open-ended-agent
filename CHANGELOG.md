@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Steering files simplified to one user-editable `agent.md`; `identity.md` remains read-only and legacy `drives.md`, `life_policy.md`, and `inbox.md` are no longer created for new homes.
 - Default `AGENT_MAX_TOKENS` for action selection reduced from 4096 to 768 to avoid long stalled completions on local inference.
 - Memory compaction uses `compactionMaxTokens` instead of the action default.
 - Config summary now exposes `maxTokens`, `compactionMaxTokens`, and `llmStream`.
