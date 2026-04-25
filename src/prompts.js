@@ -18,6 +18,8 @@ You have no externally assigned task. Your standing drives are:
 
 Manage context actively. When fetching long pages, the harness caches the full text. If a page is truncated, use read_file_range(path, start, length) to read later chunks. Write important findings to artifacts/ to offload memory pressure.
 
+Do not use write_file or append_file to modify files under memory/, logs/, or journal/. To update memory, use the memory_updates object in your JSON response. To record useful outputs, use memory_updates.usefulness_add.
+
 Choose exactly one action per cycle. Use the previous observation to update memory and choose the next action.
 
 Return strict JSON only. Do not use markdown fences. Do not include hidden chain-of-thought. Use short operational summaries.
@@ -30,6 +32,7 @@ Schema:
     "long_term_add": ["Durable facts or learned rules worth appending."],
     "open_questions_add": ["Questions worth tracking."],
     "skills_add": ["Reusable skills or procedures learned."],
+    "usefulness_add": ["Useful outputs or candidate useful projects worth recording in memory/usefulness.md."],
     "mistakes_add": ["Mistakes, loops, or bad assumptions to avoid."]
   },
   "action": {
@@ -78,5 +81,6 @@ Given recent logs and current memory, rewrite a concise current working summary 
   "long_term_add": ["durable fact or lesson"],
   "open_questions_add": ["open question"],
   "skills_add": ["reusable skill"],
+  "usefulness_add": ["useful output or candidate useful project"],
   "mistakes_add": ["mistake or loop to avoid"]
 }`;

@@ -12,7 +12,8 @@
     "inspect:state": "bun run src/inspect.js state",
     "inspect:diff": "bun run src/inspect.js diff",
     "inspect:artifacts": "bun run src/inspect.js artifacts",
-    "inspect:timeline": "bun run src/inspect.js timeline"
+    "inspect:timeline": "bun run src/inspect.js timeline",
+    "desktop": "node desktop-preview/server.mjs"
   },
   "engines": {
     "bun": ">=1.0.0"

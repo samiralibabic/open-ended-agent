@@ -77,7 +77,7 @@ bun run doctor
 
 Each cycle:
 
-1. Loads identity, drives, inbox, memory files, recent logs, and sandbox tree from disk
+1. Loads identity, drives, optional life policy, inbox, memory files, recent logs, and sandbox tree from disk
 2. Sends curated context to the model via `/v1/chat/completions`
 3. Requires strict JSON with one chosen action
 4. Applies memory updates from the model
@@ -100,12 +100,14 @@ The harness creates this structure inside `agent-home/` (default: `./agent-home`
 agent-home/
   identity.md          — static identity statement
   drives.md            — standing drives (loaded every cycle)
+  life_policy.md       — optional standing policy for useful-autonomy runs
   inbox.md             — human notes, readable while running
   memory/
     working_summary.md  — current operational self-model
     long_term.md        — durable facts and learned rules
     open_questions.md   — active research questions
     skills.md           — reusable procedures
+    usefulness.md       — useful outputs, beneficiaries, validation, candidate projects
     mistakes.md          — failure modes and loops to avoid
   journal/
     YYYY-MM-DD.md       — daily cycle journal
@@ -119,7 +121,7 @@ agent-home/
   snapshots/
 ```
 
-The model can write only to `workspace/` and `artifacts/`. It updates memory through the structured `memory_updates` channel, not by directly rewriting memory files.
+The model can write only to `workspace/` and `artifacts/`. It updates memory through the structured `memory_updates` channel, not by directly rewriting memory files. Useful-output notes are appended with `memory_updates.usefulness_add`.
 
 ## Internet access
 
@@ -156,6 +158,46 @@ Edit `agent-home/inbox.md` while the agent is running. The loop reads it every c
 Investigate whether your search behavior is becoming repetitive.
 Prefer building a small artifact over more journaling.
 ```
+
+## Useful-autonomy mode
+
+For a pure open-ended run, leave `agent-home/life_policy.md` minimal and observe what the agent does from its broad drives.
+
+For a product-oriented run, edit `agent-home/life_policy.md` before or during execution:
+
+```md
+# Life Policy
+
+When idle for several cycles, choose one small reversible project.
+
+The project should:
+
+- reuse at least one captured skill
+- produce one concrete artifact, script, dataset, guide, or test result
+- validate at least one claim with a safe local experiment when possible
+- keep disk/network usage small
+- finish with a short completion note: what was produced, what was validated, what remains uncertain
+
+Prefer projects useful to a human observer, not only to your own internal notes. Record useful outputs and candidate projects in memory/usefulness.md.
+```
+
+This preserves autonomy while making usefulness an explicit feedback target. The agent is not assigned a fixed task; it is given a criterion for productive idle recovery.
+
+## Desktop Preview UI
+
+This repository includes a no-dependency browser-based preview in `desktop-preview/`. It is not a signed native app yet, but it provides the intended consumer-facing shape: experiment status, progress, friendly live activity cards, and a simple agent-home file browser.
+
+```bash
+bun run desktop
+```
+
+To watch an existing harness run, point the preview at the same agent home:
+
+```bash
+AGENT_HOME=/path/to/agent-home bun run desktop
+```
+
+For VM experiments, run the preview inside the VM with `HOST=0.0.0.0` and the same `AGENT_HOME` as the harness. The preview tails `logs/cycles.jsonl`; it does not call a model or own the agent loop. In the UI, users can edit only `drives.md`, `life_policy.md`, and `inbox.md`; agent outputs in `workspace/` and `artifacts/` are view-only.
 
 ## Important environment variables
 
@@ -214,6 +256,7 @@ The model receives an **operational prompt**, not a hidden chain-of-thought prom
 **Key design decisions:**
 
 - No task given from outside — the model acts on its own drives
+- Optional `life_policy.md` lets experiments separate wild autonomy from useful autonomy
 - Memory is append-only with deduplication to prevent repeated identical entries
 - Fetch caches full text for chunked reading instead of returning partial content
 - Artifact index injected each cycle instead of full artifact contents

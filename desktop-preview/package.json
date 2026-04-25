@@ -1,0 +1,13 @@
+{
+  "name": "open-ended-agent-desktop-preview",
+  "version": "0.1.0-preview",
+  "type": "module",
+  "private": true,
+  "description": "Local browser-based desktop preview for Open-Ended Agent. No npm dependencies.",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

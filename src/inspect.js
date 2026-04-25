@@ -90,6 +90,9 @@ async function inspectState() {
     path.join(dirs.memory, "open_questions.md"),
   );
   const skills = await readFileSafe(path.join(dirs.memory, "skills.md"));
+  const usefulness = await readFileSafe(
+    path.join(dirs.memory, "usefulness.md"),
+  );
   const mistakes = await readFileSafe(path.join(dirs.memory, "mistakes.md"));
 
   console.log("\n=== Agent State ===\n");
@@ -116,6 +119,31 @@ async function inspectState() {
     .filter((l) => l.trim().startsWith("-"));
   console.log(`Open Questions: ${oqLines.length}`);
   for (const l of oqLines.slice(0, 5)) {
+    console.log("  " + l.trim().slice(0, 80));
+  }
+  console.log("");
+
+  const usefulLines = usefulness
+    .split("\n")
+    .filter((l) => l.trim().startsWith("-"))
+    .filter(
+      (l) =>
+        ![
+          "- Output:",
+          "- Beneficiary:",
+          "- Why useful:",
+          "- Evidence/validation:",
+          "- Files created/updated:",
+          "- Remaining uncertainty:",
+          "- Project:",
+          "- Skill reused:",
+          "- Expected artifact:",
+          "- Validation method:",
+          "- Risk/cost:",
+        ].includes(l.trim()),
+    );
+  console.log(`Usefulness Ledger Items: ${usefulLines.length}`);
+  for (const l of usefulLines.slice(0, 5)) {
     console.log("  " + l.trim().slice(0, 80));
   }
   console.log("");
@@ -169,6 +197,7 @@ async function memoryDiff() {
   let lastLongTerm = null;
   let lastOpenQ = null;
   let lastSkills = null;
+  let lastUsefulness = null;
 
   for (const c of cycles.reverse()) {
     const mem = c.decision?.memory_updates || {};
@@ -180,6 +209,8 @@ async function memoryDiff() {
       lastOpenQ = { cycle: c.cycle, items: mem.open_questions_add };
     if (mem.skills_add?.length)
       lastSkills = { cycle: c.cycle, items: mem.skills_add };
+    if (mem.usefulness_add?.length)
+      lastUsefulness = { cycle: c.cycle, items: mem.usefulness_add };
   }
 
   if (lastWorking) {
@@ -212,7 +243,21 @@ async function memoryDiff() {
     console.log(`  (from cycle ${lastSkills.cycle})`);
   }
 
-  if (!lastWorking && !lastLongTerm && !lastOpenQ && !lastSkills) {
+  if (lastUsefulness) {
+    console.log("\nusefulness.md (additions):");
+    for (const item of lastUsefulness.items.slice(0, 5)) {
+      console.log("  + " + item.slice(0, 80));
+    }
+    console.log(`  (from cycle ${lastUsefulness.cycle})`);
+  }
+
+  if (
+    !lastWorking &&
+    !lastLongTerm &&
+    !lastOpenQ &&
+    !lastSkills &&
+    !lastUsefulness
+  ) {
     console.log("No memory updates in recent cycles.");
   }
   console.log("");

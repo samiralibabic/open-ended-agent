@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased — v0.4.0-alpha
+
+### Added
+
+- `life_policy.md` seed file loaded every cycle, enabling experiments to separate broad open-ended autonomy from useful-autonomy idle recovery policies.
+- `memory/usefulness.md` seed ledger for useful outputs, beneficiaries, validation evidence, updated files, uncertainties, and candidate useful projects.
+- `memory_updates.usefulness_add` for appending useful-output and candidate-project notes to the usefulness ledger.
+- `desktop-preview/` observer-only local browser UI for watching harness runs, editing drives/life policy/inbox, viewing agent-home files, and tailing `logs/cycles.jsonl`.
+- Simplified desktop preview into a normie-friendly observer dashboard with progress, friendly activity cards, a collapsible file browser, and advanced technical details hidden by default.
+
 ## [0.3.0] — 2026-04-24 — First public experimental release
 
 ### Added

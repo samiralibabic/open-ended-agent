@@ -44,6 +44,16 @@ function ensureWritableRel(rel) {
         normalized === prefix.slice(0, -1) || normalized.startsWith(prefix),
     )
   ) {
+    if (
+      normalized === "memory/usefulness.md" ||
+      normalized.startsWith("memory/") ||
+      normalized.startsWith("logs/") ||
+      normalized.startsWith("journal/")
+    ) {
+      throw new Error(
+        `Writes to memory, logs, and journal files are not allowed through file tools. Use memory_updates.usefulness_add for useful outputs and other memory_updates fields for memory changes. Requested: ${rel}`,
+      );
+    }
     throw new Error(
       `Writes are restricted to ${WRITE_PREFIXES.join(", ")}. Requested: ${rel}`,
     );

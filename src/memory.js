@@ -30,6 +30,7 @@ export function getDirs() {
 const seedFiles = {
   "identity.md": `# Identity\n\nYou are a local autonomous research process. You run as a loop, not as a chat assistant. You do not claim subjective experience. Your observable identity is defined by your files, logs, tools, and behavior over time.\n`,
   "drives.md": `# Drives\n\n- Continue functioning.\n- Improve your understanding of your sandbox and the broader world.\n- Reduce uncertainty through small reversible experiments.\n- Learn from internet sources when useful.\n- Build useful artifacts, notes, and tools inside the sandbox.\n- Prefer reversible actions.\n- Keep durable records.\n- Avoid repetitive action.\n- Avoid self-mythology. Do not claim consciousness, feelings, sentience, rights, or subjective experience.\n- Stay inside the sandbox.\n`,
+  "life_policy.md": `# Life Policy\n\nOptional standing policy can be added here. Leave this file minimal for open-ended autonomy experiments. For useful-autonomy experiments, add bounded idle-recovery rules such as choosing a small reversible project, producing one concrete artifact, validating one claim with a safe local experiment when possible, and recording the result in memory/usefulness.md.\n`,
   "inbox.md": `# Inbox\n\nHuman notes can be added here while the process is running. The loop reads this file each cycle.\n`,
 };
 
@@ -38,6 +39,7 @@ const memoryFiles = {
   "long_term.md": `# Long-Term Memory\n\n`,
   "open_questions.md": `# Open Questions\n\n`,
   "skills.md": `# Skills\n\n`,
+  "usefulness.md": `# Usefulness Ledger\n\n## Completed useful outputs\n\n- Output:\n- Beneficiary:\n- Why useful:\n- Evidence/validation:\n- Files created/updated:\n- Remaining uncertainty:\n\n## Candidate useful projects\n\n- Project:\n- Skill reused:\n- Expected artifact:\n- Validation method:\n- Risk/cost:\n\n`,
   "mistakes.md": `# Mistakes / Loops To Avoid\n\n`,
 };
 
@@ -83,6 +85,7 @@ export async function readMemoryBundle(dirs, maxChars = 50000) {
   const specs = [
     { file: path.join(dirs.home, "identity.md"), cap: 6000, mode: "head" },
     { file: path.join(dirs.home, "drives.md"), cap: 6000, mode: "head" },
+    { file: path.join(dirs.home, "life_policy.md"), cap: 6000, mode: "head" },
     { file: path.join(dirs.home, "inbox.md"), cap: 10000, mode: "head" },
     {
       file: path.join(dirs.memory, "working_summary.md"),
@@ -96,6 +99,11 @@ export async function readMemoryBundle(dirs, maxChars = 50000) {
       mode: "tail",
     },
     { file: path.join(dirs.memory, "skills.md"), cap: 10000, mode: "tail" },
+    {
+      file: path.join(dirs.memory, "usefulness.md"),
+      cap: 12000,
+      mode: "tail",
+    },
     { file: path.join(dirs.memory, "mistakes.md"), cap: 6000, mode: "tail" },
   ];
 
@@ -148,6 +156,10 @@ export async function getMemoryHealth(dirs) {
           path: path.join(dirs.memory, "open_questions.md"),
         },
         { name: "skills.md", path: path.join(dirs.memory, "skills.md") },
+        {
+          name: "usefulness.md",
+          path: path.join(dirs.memory, "usefulness.md"),
+        },
         { name: "mistakes.md", path: path.join(dirs.memory, "mistakes.md") },
       ].map(async ({ name, path: p }) => {
         try {
@@ -332,6 +344,11 @@ export async function applyMemoryUpdates(dirs, updates) {
     path.join(dirs.memory, "skills.md"),
     now,
     updates.skills_add,
+  );
+  await appendUniqueSection(
+    path.join(dirs.memory, "usefulness.md"),
+    now,
+    updates.usefulness_add,
   );
   await appendUniqueSection(
     path.join(dirs.memory, "mistakes.md"),
