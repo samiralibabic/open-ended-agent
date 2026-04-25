@@ -6,11 +6,19 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- `life_policy.md` seed file loaded every cycle, enabling experiments to separate broad open-ended autonomy from useful-autonomy idle recovery policies.
-- `memory/usefulness.md` seed ledger for useful outputs, beneficiaries, validation evidence, updated files, uncertainties, and candidate useful projects.
-- `memory_updates.usefulness_add` for appending useful-output and candidate-project notes to the usefulness ledger.
-- `desktop-preview/` observer-only local browser UI for watching harness runs, editing drives/life policy/inbox, viewing agent-home files, and tailing `logs/cycles.jsonl`.
-- Simplified desktop preview into a normie-friendly observer dashboard with progress, friendly activity cards, a collapsible file browser, and advanced technical details hidden by default.
+- Streaming chat completion support (`AGENT_LLM_STREAM=1`): SSE chunks are parsed incrementally, avoiding the 300s non-streaming response timeout that caused fetch failures on slow local inference endpoints.
+- `AGENT_COMPACTION_MAX_TOKENS` (default 1536) and `AGENT_LLM_STREAM` (default true) and `AGENT_LLM_TIMEOUT_MS` (default 0) settings.
+- LLM fetch error diagnostics now include elapsed time, error name, message, and network cause code.
+
+### Changed
+
+- Default `AGENT_MAX_TOKENS` for action selection reduced from 4096 to 768 to avoid long stalled completions on local inference.
+- Memory compaction uses `compactionMaxTokens` instead of the action default.
+- Config summary now exposes `maxTokens`, `compactionMaxTokens`, and `llmStream`.
+
+### Fixed
+
+- Fixed intermittent `TypeError: fetch failed` cycles caused by non-streaming requests exceeding Node.js ~300s response timeout on slow local inference. Streaming sends SSE chunks incrementally so the client receives data before full completion.
 
 ## [0.3.0] — 2026-04-24 — First public experimental release
 

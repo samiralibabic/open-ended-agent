@@ -211,7 +211,10 @@ AGENT_CONTEXT_CHAR_BUDGET    default 90000 chars per cycle
 AGENT_RECENT_LOG_CYCLES      default 6
 AGENT_COMPACT_EVERY          default 20 (memory compaction interval)
 AGENT_TEMPERATURE            default 0.4
-AGENT_MAX_TOKENS             default 4096
+AGENT_MAX_TOKENS             default 768 (max tokens for action selection; kept low to avoid long local inference stalls)
+AGENT_COMPACTION_MAX_TOKENS  default 1536 (max tokens for memory compaction)
+AGENT_LLM_STREAM             default 1 (streaming SSE; recommended for slow local endpoints)
+AGENT_LLM_TIMEOUT_MS         default 0 (no harness-side abort; streaming avoids long response waits)
 AGENT_JSON_MODE              default 1
 AGENT_WEB                    default 1
 AGENT_SHELL                  default 0
@@ -221,6 +224,8 @@ AGENT_FETCH_TEXT_CHARS       default 12000 (preview size per fetch)
 AGENT_CONTEXT_RESULT_CHARS   default 6000 (previous observation truncation)
 AGENT_OBSERVE_MAX_ENTRIES    default 80 (file tree entries per observe)
 ```
+
+**Note on `max_tokens`**: `AGENT_MAX_TOKENS` and `AGENT_COMPACTION_MAX_TOKENS` are per-request harness settings. They do not require changing the shared inference server launch configuration.
 
 ## Safety model
 

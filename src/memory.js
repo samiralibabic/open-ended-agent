@@ -404,6 +404,9 @@ export async function buildContext(dirs, cycle) {
     `fetchTextChars=${config.fetchTextChars}`,
     `contextResultChars=${config.contextResultChars}`,
     `cacheDir=artifacts/web-cache/`,
+    `maxTokens=${config.maxTokens}`,
+    `compactionMaxTokens=${config.compactionMaxTokens}`,
+    `llmStream=${config.llmStream}`,
   ].join("\n");
 
   return {
@@ -431,7 +434,7 @@ export async function maybeCompact(dirs, cycle) {
       { role: "system", content: COMPACTION_PROMPT },
       { role: "user", content: userContent },
     ],
-    { temperature: 0.2, maxTokens: 4096 },
+    { temperature: 0.2, maxTokens: config.compactionMaxTokens },
   );
   await applyMemoryUpdates(dirs, json);
   await appendJsonl(path.join(dirs.logs, "compactions.jsonl"), {
