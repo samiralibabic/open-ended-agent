@@ -54,7 +54,7 @@ AGENT_CONTEXT_CHAR_BUDGET=120000 \
 bun run start
 ```
 
-See [Advanced: llama.cpp / TurboQuant](#advanced-llama-cpp-turboquant) for TurboQuant-specific setup.
+See [Advanced: llama.cpp / TurboQuant](#advanced-llamacpp--turboquant) for TurboQuant-specific setup.
 
 ### Smoke test (3 cycles)
 
@@ -282,6 +282,16 @@ In local runs, the agent:
 - recovered from TurboQuant timeout errors without losing research trajectory
 
 This behavior emerged from the agent instructions and persistent memory — not from a pre-written task script.
+
+## Research and project history
+
+The repository also preserves the experimental record and architecture decisions that are not visible from the implementation or changelog alone:
+
+- [Experiments](docs/EXPERIMENTS.md) — major runs, observed behavior, failures, fixes, and narrow findings
+- [Design history](docs/DESIGN_HISTORY.md) — why the loop, memory, tool, safety, UI, and steering architecture evolved this way
+- [Roadmap](ROADMAP.md) — communication, useful-autonomy validation, Hermes/OpenClaw comparison, release criteria, and open questions
+
+These documents are intended to preserve enough context to continue the project without relying on the original development chat.
 
 ## First experiment suggestion
 
